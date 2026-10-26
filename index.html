@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Calculateur d'exposition au mécanisme de capacité</title>
+<meta name="description" content="Estimation indicative de la contribution au mécanisme de capacité pour une entreprise, à partir du quotient publié par la CRE." />
+<style>
+  :root {
+    --charbon: #14181f;
+    --creme: #faf7f2;
+    --orange: #e4572e;
+    --orange-fonce: #bb4726;
+    --encre: #3a414d;
+    --gris: #8d8579;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--creme);
+    color: var(--charbon);
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .bande { height: 10px; background: var(--orange); }
+  main { max-width: 620px; margin: 0 auto; padding: 44px 22px 90px; }
+  .kicker { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; letter-spacing: .12em; color: var(--orange); }
+  .kicker::before { content: ''; width: 14px; height: 14px; border-radius: 4px; background: var(--orange); }
+  h1 { margin-top: 18px; font-size: 38px; font-weight: 900; line-height: 1.06; letter-spacing: -.03em; }
+  h1 em { color: var(--orange); font-style: normal; }
+  .chapeau { margin-top: 16px; font-size: 18px; color: var(--encre); }
+  .carte { margin-top: 30px; border: 3px solid var(--charbon); border-radius: 14px; padding: 22px 20px; background: #fff; }
+  label { display: block; font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .aide { font-size: 13px; font-weight: 500; color: var(--gris); margin-top: 6px; }
+  input[type=number] {
+    width: 100%; padding: 14px 16px; font-size: 26px; font-weight: 800; font-family: inherit;
+    border: 3px solid var(--charbon); border-radius: 10px; background: var(--creme); color: var(--charbon);
+  }
+  input[type=number]:focus { outline: 3px solid var(--orange); outline-offset: 2px; }
+  .champ + .champ { margin-top: 22px; }
+  .sortie { margin-top: 26px; border-radius: 14px; background: var(--charbon); color: var(--creme); padding: 24px 20px; }
+  .sortie .titre { font-size: 14px; font-weight: 700; letter-spacing: .1em; color: #9aa1ad; }
+  .montant { margin-top: 10px; font-size: 46px; font-weight: 900; color: var(--orange); font-variant-numeric: tabular-nums; }
+  .detail { margin-top: 8px; font-size: 15px; color: #d8d3ca; }
+  .barres { margin-top: 20px; }
+  .barre-ligne { margin-top: 14px; }
+  .barre-lab { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .barre-fond { height: 16px; border-radius: 5px; background: rgba(250,247,242,.16); overflow: hidden; }
+  .barre-val { height: 16px; background: var(--orange); border-radius: 5px; transition: width .25s ease; }
+  .barre-val.gris { background: #9aa1ad; }
+  .avert {
+    margin-top: 26px; padding: 16px 18px; border-left: 6px solid var(--orange);
+    background: rgba(228,87,46,.08); border-radius: 8px;
+    font-size: 14px; font-weight: 600; color: var(--orange-fonce);
+  }
+  details { margin-top: 26px; font-size: 15px; color: var(--encre); }
+  summary { cursor: pointer; font-weight: 700; color: var(--charbon); }
+  details p, details li { margin-top: 10px; }
+  details ul { margin-left: 20px; }
+  footer { margin-top: 40px; font-size: 12px; color: var(--gris); }
+  a { color: var(--orange-fonce); }
+  @media (max-width: 420px) {
+    h1 { font-size: 30px; }
+    .montant { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+<div class="bande"></div>
+<main>
+  <div class="kicker">ÉLECTRICITÉ · ENTREPRISES</div>
+  <h1>Combien pèse votre <em>pointe d'hiver</em> ?</h1>
+  <p class="chapeau">Une estimation de la contribution au mécanisme de capacité, à partir du quotient publié par la CRE pour l'hiver 2026-2027.</p>
+
+  <div class="carte">
+    <div class="champ">
+      <label for="puissance">Puissance appelée pendant les heures de pointe</label>
+      <input id="puissance" type="number" inputmode="decimal" min="0" step="10" value="500" />
+      <div class="aide">En kilowatts, moyenne sur les créneaux 7h-10h et 17h-20h des jours de pointe.</div>
+    </div>
+    <div class="champ">
+      <label for="decalage">Part de cette puissance que vous pouvez décaler</label>
+      <input id="decalage" type="number" inputmode="decimal" min="0" max="100" step="5" value="50" />
+      <div class="aide">En pourcentage, entre 0 et 100.</div>
+    </div>
+  </div>
+
+  <div class="sortie">
+    <div class="titre">CONTRIBUTION ESTIMÉE</div>
+    <div class="montant" id="total">9 323 €</div>
+    <div class="detail" id="detailTotal"></div>
+
+    <div class="barres">
+      <div class="barre-ligne">
+        <div class="barre-lab"><span>Exposition actuelle</span><span id="labActuel">9 323 €</span></div>
+        <div class="barre-fond"><div class="barre-val gris" id="barreActuel" style="width:100%"></div></div>
+      </div>
+      <div class="barre-ligne">
+        <div class="barre-lab"><span>Après décalage</span><span id="labApres">4 662 €</span></div>
+        <div class="barre-fond"><div class="barre-val" id="barreApres" style="width:50%"></div></div>
+      </div>
+    </div>
+    <div class="detail" id="economie" style="margin-top:18px;"></div>
+  </div>
+
+  <div class="avert">
+    Contenu à titre informatif uniquement. Il ne constitue ni un conseil, ni une offre commerciale, ni une estimation contractuelle : votre facture dépend de votre contrat et des autres termes qui s'y ajoutent.
+  </div>
+
+  <details>
+    <summary>Comment le calcul est fait</summary>
+    <p>La CRE publie un quotient de <strong>18 646,6 €/MW</strong> pour la période de livraison 2026-2027 (délibération du 23 septembre 2026). La contribution d'un consommateur est proportionnelle à sa puissance soutirée corrigée pendant les jours de pointe de l'hiver.</p>
+    <p>Le calcul ici multiplie ce quotient par la puissance indiquée, puis applique la part que vous dites pouvoir décaler.</p>
+    <ul>
+      <li>500 kW sur les six heures de pointe donnent 0,5 MW, soit environ 9 323 € de contribution sur l'hiver.</li>
+      <li>Une moitié décalée hors de ces six heures divise ce montant par deux.</li>
+      <li>Les six heures correspondent aux créneaux 7h-10h et 17h-20h, sur exactement 22 jours de pointe par hiver.</li>
+    </ul>
+    <p>Il s'agit d'un ordre de grandeur, hors autres termes de la facture et hors modulation propre à votre contrat.</p>
+  </details>
+
+  <footer>
+    Sources : CRE, paramètres de financement du mécanisme de capacité 2026-2027 (23/09/2026) ; RTE, note de sélection des jours PP (30/09/2026) ; décret n° 2025-1441.
+  </footer>
+</main>
+
+<script>
+  // Quotient CRE constaté pour la période de livraison 2026-2027.
+  const QUOTIENT_EURO_MW = 18646.6;
+
+  const fmt = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+
+  const champPuissance = document.getElementById('puissance');
+  const champDecalage = document.getElementById('decalage');
+
+  function calculer() {
+    const kw = Math.max(0, Number(champPuissance.value) || 0);
+    const part = Math.min(100, Math.max(0, Number(champDecalage.value) || 0)) / 100;
+
+    const total = kw / 1000 * QUOTIENT_EURO_MW;
+    const restant = total * (1 - part);
+    const economie = total - restant;
+
+    document.getElementById('total').textContent = fmt.format(total);
+    document.getElementById('detailTotal').textContent =
+      Math.round(kw) + ' kW, soit ' + (kw / 1000).toFixed(2).replace('.', ',') + ' MW × ' +
+      fmt.format(QUOTIENT_EURO_MW) + '/MW sur l\'hiver.';
+
+    document.getElementById('labActuel').textContent = fmt.format(total);
+    document.getElementById('labApres').textContent = fmt.format(restant);
+    document.getElementById('barreActuel').style.width = '100%';
+    document.getElementById('barreApres').style.width = (total > 0 ? (1 - part) * 100 : 0) + '%';
+
+    document.getElementById('economie').textContent = economie > 0
+      ? 'Décaler ' + Math.round(part * 100) + ' % de cette puissance fait varier la contribution d\'environ ' + fmt.format(economie) + ' sur l\'hiver, sans consommer un kilowattheure de moins.'
+      : 'Indiquez une part à décaler pour voir la variation.';
+  }
+
+  champPuissance.addEventListener('input', calculer);
+  champDecalage.addEventListener('input', calculer);
+  calculer();
+</script>
+</body>
+</html>
